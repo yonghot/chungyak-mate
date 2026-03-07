@@ -28,6 +28,7 @@
     "node_modules/",
     ".next/",
     "out/",
-    "coverage/"
+    "coverage/",
+    "**/__tests__/**"
   ]
 }

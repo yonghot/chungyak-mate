@@ -629,8 +629,11 @@ SUPABASE_SERVICE_ROLE_KEY=      # 서버 전용 서비스 키 (RLS 우회)
 # 인증 (필수)
 NEXT_PUBLIC_SITE_URL=           # 사이트 URL (OAuth 콜백용)
 
-# Cron (선택)
+# Cron (필수 - 동기화 엔드포인트)
 CRON_SECRET=                    # Cron 엔드포인트 인증 시크릿
+
+# 공공데이터 API (필수 - 청약홈 연동)
+APPLYHOME_API_KEY=              # 공공데이터포털 청약홈 API 인증키
 
 # 개발 (선택)
 NEXT_PUBLIC_ENV=                # development | staging | production
@@ -702,7 +705,7 @@ CLAUDE.md 2절에 따라:
 | **인프라** | Rate Limiting (Vercel Edge Middleware 또는 pg_rate_limiter) | 높음 |
 | **인프라** | 에러 모니터링 (Sentry 등) | 높음 |
 | **인프라** | 로깅/APM (Vercel Analytics + 커스텀) | 중간 |
-| **데이터** | 공공데이터 API 자동 연동 (Cron) | 높음 |
+| **데이터** | ~~공공데이터 API 자동 연동 (Cron)~~ → ✅ 구현 완료 (`docs/public-api-integration.md` 참조) | 높음 |
 | **데이터** | 판정 규칙 버전 히스토리 테이블 | 중간 |
 | **보안** | 이메일 인증 필수화 | 높음 |
 | **보안** | CSP 헤더 강화 | 중간 |
@@ -813,6 +816,7 @@ CLAUDE.md 2절에 따라:
 | `SUPABASE_SERVICE_ROLE_KEY` | 서버 전용 | ✅ | RLS 우회 관리자 키 |
 | `NEXT_PUBLIC_SITE_URL` | 클라이언트 | ✅ | OAuth 콜백 URL |
 | `CRON_SECRET` | 서버 전용 | ✅ | Cron 엔드포인트 인증 |
+| `APPLYHOME_API_KEY` | 서버 전용 | ✅ | 공공데이터포털 청약홈 API 인증키 |
 | `NEXT_PUBLIC_ENV` | 클라이언트 | ❌ | 환경 식별 (기본: development) |
 
 ### 15.5 Supabase 인프라
@@ -821,7 +825,8 @@ CLAUDE.md 2절에 따라:
 supabase/
 ├── config.toml         ← 로컬 개발 설정
 ├── migrations/
-│   └── 20260304000000_init.sql  ← 초기 스키마 (7 테이블, RLS, 인덱스)
+│   ├── 20260304000000_init.sql          ← 초기 스키마 (7 테이블, RLS, 인덱스)
+│   └── 20260305000000_add_sync_fields.sql ← 공공 API 동기화 필드 (external_id, sync_logs)
 └── seed.sql            ← 시드 데이터 (15 단지, 공급유형, 자격규칙)
 ```
 
@@ -840,3 +845,4 @@ supabase/
 | 2026-03-04 | 초기 아키텍처 설계서 작성 |
 | 2026-03-04 | MVP 구현 완료 반영 — 파일 통계, 테스트 커버리지, 보안 강화, 빌드 검증 추가 |
 | 2026-03-05 | 배포 인프라 설계 추가 — Vercel 설정, 보안 헤더, Supabase 구성 |
+| 2026-03-05 | 공공데이터 API 연동 구현 — 청약홈 API 클라이언트, 동기화 서비스, Cron 엔드포인트, DB 마이그레이션 (`docs/public-api-integration.md` 참조) |

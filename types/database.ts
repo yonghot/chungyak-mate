@@ -24,6 +24,8 @@ export type EligibilityStatus = 'eligible' | 'ineligible' | 'conditional';
 
 export type NotificationType = 'recommendation' | 'deadline' | 'result' | 'system';
 
+export type SyncLogStatus = 'running' | 'success' | 'partial' | 'failed';
+
 export interface Database {
   public: {
     Tables: {
@@ -119,6 +121,12 @@ export interface Database {
           status: ComplexStatus;
           source_url: string | null;
           raw_data: Record<string, unknown> | null;
+          external_id: string | null;
+          move_in_date: string | null;
+          special_supply_start: string | null;
+          special_supply_end: string | null;
+          contract_start: string | null;
+          contract_end: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -138,6 +146,12 @@ export interface Database {
           status?: ComplexStatus;
           source_url?: string | null;
           raw_data?: Record<string, unknown> | null;
+          external_id?: string | null;
+          move_in_date?: string | null;
+          special_supply_start?: string | null;
+          special_supply_end?: string | null;
+          contract_start?: string | null;
+          contract_end?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -157,6 +171,12 @@ export interface Database {
           status?: ComplexStatus;
           source_url?: string | null;
           raw_data?: Record<string, unknown> | null;
+          external_id?: string | null;
+          move_in_date?: string | null;
+          special_supply_start?: string | null;
+          special_supply_end?: string | null;
+          contract_start?: string | null;
+          contract_end?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -353,6 +373,47 @@ export interface Database {
           },
         ];
       };
+      sync_logs: {
+        Row: {
+          id: string;
+          started_at: string;
+          finished_at: string | null;
+          status: SyncLogStatus;
+          total_fetched: number;
+          inserted: number;
+          updated: number;
+          skipped: number;
+          failed: number;
+          error_detail: Array<{ external_id: string; message: string }>;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          started_at?: string;
+          finished_at?: string | null;
+          status: SyncLogStatus;
+          total_fetched?: number;
+          inserted?: number;
+          updated?: number;
+          skipped?: number;
+          failed?: number;
+          error_detail?: Array<{ external_id: string; message: string }>;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          started_at?: string;
+          finished_at?: string | null;
+          status?: SyncLogStatus;
+          total_fetched?: number;
+          inserted?: number;
+          updated?: number;
+          skipped?: number;
+          failed?: number;
+          error_detail?: Array<{ external_id: string; message: string }>;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -363,6 +424,7 @@ export interface Database {
       supply_type: SupplyType;
       eligibility_status: EligibilityStatus;
       notification_type: NotificationType;
+      sync_log_status: SyncLogStatus;
     };
   };
 }
@@ -399,3 +461,6 @@ export type BookmarkInsert = Database['public']['Tables']['bookmarks']['Insert']
 
 export type Notification = Database['public']['Tables']['notifications']['Row'];
 export type NotificationInsert = Database['public']['Tables']['notifications']['Insert'];
+
+export type SyncLog = Database['public']['Tables']['sync_logs']['Row'];
+export type SyncLogInsert = Database['public']['Tables']['sync_logs']['Insert'];

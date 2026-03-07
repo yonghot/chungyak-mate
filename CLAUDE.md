@@ -178,3 +178,11 @@ constants/        → 상수 및 설정값
 ### 9.5 테스트 기대값은 구현체 기준으로 작성
 - **교훈**: `formatArea(60)`이 `'60m²'`를 반환할 것으로 가정했으나, 구현체는 `.toFixed(2)`를 사용하여 `'60.00m²'` 반환
 - **재발 방지**: 테스트 작성 전 반드시 구현체 코드를 확인하고, 구현체의 실제 동작에 맞는 기대값을 설정. "있어야 할 동작"이 아닌 "실제 동작"을 테스트
+
+### 9.6 라우트 그룹 레이아웃의 리다이렉트 대상은 같은 그룹 밖에 배치
+- **교훈**: `(main)/layout.tsx`가 프로필 미존재 시 `/onboarding`으로 리다이렉트하는데, `/onboarding` 페이지가 `(main)` 그룹 안에 있어서 레이아웃이 다시 실행 → 프로필 체크 → 리다이렉트 → 무한 루프 발생
+- **재발 방지**: 레이아웃에서 조건부 리다이렉트하는 대상 페이지는 반드시 해당 레이아웃이 적용되지 않는 별도 라우트 그룹에 배치한다. 예: `(main)/layout.tsx`에서 리다이렉트하는 `/onboarding`은 `(onboarding)/` 그룹에 배치. 새 페이지 추가 시 어떤 레이아웃이 적용되는지 반드시 확인한다
+
+### 9.7 프론트엔드 타입은 반드시 API 실제 응답 구조와 일치시킨다
+- **교훈**: `/recommend` 페이지가 `{ recommendations: RecommendedComplex[] }` 타입을 기대했으나 API는 `RecommendedComplex[]`를 직접 반환하여 `data.recommendations`가 `undefined` → `Cannot read properties of undefined (reading 'length')` 런타임 에러 발생. 또한 필드명 불일치(`eligibleTypes`/`totalTypes` vs `eligibleCount`)
+- **재발 방지**: 클라이언트 컴포넌트의 `useQuery<T>` 제네릭 타입과 props 인터페이스는 API 라우트 → 서비스 레이어의 실제 반환 타입을 추적하여 정확히 일치시킨다. `successResponse(data)` 래퍼가 `{ data: T, error: null }` 구조를 만들므로, `T`에 해당하는 실제 타입을 확인한다

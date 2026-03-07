@@ -7,10 +7,16 @@ export default defineConfig({
     environment: 'node',
     include: ['**/*.test.ts', '**/*.test.tsx'],
     exclude: ['node_modules', '.next'],
+    environmentMatchGlobs: [
+      ['**/*.test.tsx', 'jsdom'],
+    ],
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '.'),
     },
+  },
+  esbuild: {
+    jsx: 'automatic',
   },
 });
