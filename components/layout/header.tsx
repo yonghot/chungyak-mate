@@ -52,13 +52,13 @@ export function Header() {
           <Link
             href="/complexes"
             className="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
-            aria-label="청약메이트 홈으로 이동"
+            aria-label="청약플러스 홈으로 이동"
           >
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
               <Building2 className="h-4 w-4 text-primary-foreground" />
             </div>
             <span className="text-base font-bold text-foreground tracking-tight">
-              청약메이트
+              청약플러스
             </span>
           </Link>
         </div>

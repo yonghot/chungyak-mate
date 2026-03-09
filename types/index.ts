@@ -27,6 +27,21 @@ export type {
 
 export type { DomainGlossary } from './glossary';
 
+export type {
+  ValueGrade,
+  ValueFactor,
+  ValueAnalysis,
+  ConfidenceLevel,
+  PredictionResult,
+  ProtectionSignal,
+  SignalReason,
+  ProtectionResult,
+  SubscriptionPlan,
+  PlanLimits,
+  ReportType,
+  ReportMeta,
+} from './plus-features';
+
 /** 통일 API 응답 포맷 */
 export interface ApiResponse<T> {
   data: T | null;

@@ -178,7 +178,7 @@ export default function LandingPage() {
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
               <Home className="h-4 w-4 text-white" />
             </div>
-            <span className="text-sm font-bold text-foreground tracking-tight">청약메이트</span>
+            <span className="text-sm font-bold text-foreground tracking-tight">청약플러스</span>
           </div>
           <nav className="hidden items-center gap-6 sm:flex">
             <a href="#features" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
@@ -209,7 +209,7 @@ export default function LandingPage() {
             <FadeInUp delay={0}>
               <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1">
                 <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-                <span className="text-xs font-semibold text-blue-700">청약 전문 분석 서비스</span>
+                <span className="text-xs font-semibold text-blue-700">내 청약 경쟁력에 +를 더하는</span>
               </div>
             </FadeInUp>
 
@@ -225,8 +225,8 @@ export default function LandingPage() {
 
             <FadeInUp delay={0.16}>
               <p className="mt-5 text-lg leading-relaxed text-muted-foreground sm:text-xl">
-                시행사 도메인 지식을 기반으로 내 청약 자격을 정확히 진단하고,
-                당첨 가능성이 높은 단지를 맞춤 추천해드립니다.
+                물건 가치 분석, 경쟁률 예측, 청약 기회 보호까지.
+                내 청약 경쟁력을 한눈에 진단하고 최적의 전략을 세워보세요.
               </p>
             </FadeInUp>
 
@@ -303,7 +303,7 @@ export default function LandingPage() {
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground sm:text-lg">
                 복잡한 청약 제도를 직접 공부할 필요 없습니다.
-                청약메이트가 모든 것을 분석해드립니다.
+                청약플러스가 모든 것을 분석해드립니다.
               </p>
             </div>
           </FadeInUp>
@@ -348,7 +348,7 @@ export default function LandingPage() {
           {/* 텍스트 */}
           <FadeInUp>
             <div>
-              <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-primary">왜 청약메이트인가</p>
+              <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-primary">왜 청약플러스인가</p>
               <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                 전문가 수준의 분석을
                 <br />
@@ -441,11 +441,11 @@ export default function LandingPage() {
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
                   <Home className="h-4 w-4 text-white" />
                 </div>
-                <span className="text-sm font-bold text-foreground">청약메이트</span>
+                <span className="text-sm font-bold text-foreground">청약플러스</span>
               </div>
               <p className="text-sm leading-relaxed text-muted-foreground">
-                시행사 도메인 지식 기반의 청약 자격 진단 및 당첨 확률 분석 서비스.
-                복잡한 청약을 쉽고 명확하게.
+                물건 가치 분석 x 경쟁률 예측 x 청약 기회 보호 통합 플랫폼.
+                내 청약 경쟁력에 +를 더하는 서비스.
               </p>
             </div>
 
@@ -485,7 +485,7 @@ export default function LandingPage() {
 
           <div className="mt-10 border-t border-slate-100 pt-6 text-center">
             <p className="text-xs text-muted-foreground">
-              &copy; 2025 청약메이트. All rights reserved.
+              &copy; 2025 청약플러스. All rights reserved.
               <span className="mx-2 text-slate-300">|</span>
               본 서비스의 진단 결과는 참고용이며, 최종 자격 여부는 공식 기관에서 확인하시기 바랍니다.
             </p>

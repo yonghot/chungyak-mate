@@ -1,5 +1,70 @@
 # 프로젝트 진행 내역
 
+## 2026-03-09: PRD v2.1 리얼라인먼트 — 청약메이트 → 청약플러스
+
+### 개요
+
+새 PRD v2.1 기반으로 프로젝트를 청약플러스(ChungYak Plus)로 리브랜딩하고,
++가치/+예측/+보호 신규 기능의 타입 정의 및 라우트 스텁을 추가했다.
+기존 MVP 코드(자격 진단, 가점 분석, 추천)는 그대로 유지하며 증분 확장 구조를 마련했다.
+
+### 변경 범위
+
+**Phase 0: Delta Analysis**
+- `docs/delta-analysis.md` — 기존 코드 vs 신규 PRD 12항목 비교 분석
+
+**Phase 1: 문서 최신화**
+- `PRD.md` — PRD v2.1로 전면 개정 (기존 기술 스택 유지)
+- `DESIGN.md` — 타이틀/태그라인 리브랜딩
+- `CLAUDE.md` — 프로젝트명/태그라인 리브랜딩
+
+**Phase 2: 코드 리얼라인먼트**
+
+*브랜딩 변경 (청약메이트 → 청약플러스)*:
+- `package.json` — name, version(0.2.0), description
+- `components/layout/header.tsx` — 로고 텍스트, aria-label
+- `app/page.tsx` — 랜딩 페이지 전체 (5곳 + 태그라인/설명)
+- `.env.example` — 주석 헤더
+- `supabase/config.toml` — 주석 헤더
+
+*신규 타입 정의*:
+- `types/plus-features.ts` — ValueGrade, ValueAnalysis, PredictionResult, ProtectionSignal, ProtectionResult, SubscriptionPlan, PlanLimits, ReportType, ReportMeta
+- `types/index.ts` — plus-features re-export 추가
+
+*신규 서비스 스텁 (Phase 2 구현 예정)*:
+- `lib/services/value-analysis-service.ts` — analyzeValue()
+- `lib/services/prediction-service.ts` — predictCompetitionRate()
+- `lib/services/protection-service.ts` — evaluateSignal()
+
+*신규 API 라우트 스텁 (501 반환)*:
+- `app/api/value-analysis/route.ts`
+- `app/api/prediction/route.ts`
+- `app/api/protection/route.ts`
+
+*신규 페이지 스텁 (준비 중 UI)*:
+- `app/(main)/dashboard/page.tsx`
+- `app/(main)/value/page.tsx`
+- `app/(main)/prediction/page.tsx`
+- `app/(main)/protection/page.tsx`
+- `app/(main)/compare/page.tsx`
+- `app/(main)/simulation/page.tsx`
+- `app/(main)/settings/page.tsx`
+
+### 검증 결과
+
+- `npm run build` 성공 (25개 라우트 정상 컴파일)
+- `npm test` 505개 통과 (기존 1개 실패는 @testing-library/dom 미설치 — 기존 이슈)
+- 신규 파일 타입 에러 0건
+
+### 원칙 준수
+
+- P1(최소변경): 기존 MVP 코드 무변경, 브랜딩 텍스트만 치환
+- P2(레이어구조유지): 서비스→리포지토리 단방향 유지, 기존 패턴 준수
+- P3(근본원인해결): 해당 없음 (신규 기능 스텁만 추가)
+- P6(기존코드존중): 테이블명 유지(profiles, complexes), 필드 증분 추가 전략 채택
+
+---
+
 ## 2026-03-08: 전체 UI/UX 프리미엄 개선
 
 ### 개요

@@ -1,6 +1,6 @@
-# 청약메이트(ChungYakMate) 기본지침서
+# 청약플러스(ChungYak Plus) 기본지침서
 
-> 시행사 도메인 지식 기반 청약 자격 진단 및 당첨 확률 분석 서비스
+> 내 청약 경쟁력에 +를 더하는 — 물건 가치 분석 x 경쟁률 예측 x 청약 기회 보호 통합 플랫폼
 > 기술 스택: Next.js (App Router), Vercel, Supabase, shadcn/ui, Tailwind CSS
 
 ---
