@@ -1,5 +1,27 @@
 # 프로젝트 진행 내역
 
+## 2026-03-10: 관리자 계정 생성 및 시드 데이터 추가
+
+### 배포 정보
+
+| 항목 | 내용 |
+|------|------|
+| **배포 시각** | 2026-03-10 14:30 KST |
+| **프로덕션 URL** | https://chungyakplus.vercel.app |
+| **리전** | ICN1 (서울) |
+| **상태** | ● Ready (빌드 48초) |
+| **포함 커밋** | `c0ff8fe` [chore] 관리자 계정 시드 데이터 추가 및 헤더 리네이밍 |
+
+### 변경 내용
+
+| 항목 | 설명 |
+|------|------|
+| 관리자 계정 (원격) | `admin@admin.com` / `admin123!` — Supabase Auth 사용자 + profiles 행 직접 생성 |
+| `supabase/seed.sql` | auth.users, auth.identities, profiles 시드 데이터 추가 (로컬 개발용) |
+| seed.sql 헤더 | `ChungYakMate` → `청약플러스`로 리네이밍 |
+
+---
+
 ## 2026-03-10: 프로덕션 배포 — +가치 분석 UI 진입점 추가
 
 ### 배포 정보
