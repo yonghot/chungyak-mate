@@ -1,5 +1,29 @@
 # 프로젝트 진행 내역
 
+## 2026-03-10: Supabase Auth 로그인 에러 수정 — NULL 텍스트 컬럼 방지
+
+### 배포 정보
+
+| 항목 | 내용 |
+|------|------|
+| **배포 시각** | 2026-03-10 15:10 KST |
+| **프로덕션 URL** | https://chungyakplus.vercel.app |
+| **리전** | ICN1 (서울) |
+| **상태** | ● Ready (빌드 49초) |
+| **포함 커밋** | `6aea8c0` [fix] Supabase Auth 로그인 에러 수정 — seed.sql NULL 텍스트 컬럼 방지 |
+
+### 문제 및 수정
+
+| 항목 | 설명 |
+|------|------|
+| **증상** | 로그인 시 "Database error querying schema" 에러 |
+| **근본 원인** | GoTrue(Go)의 `sql.Scan`이 auth.users의 NULL 텍스트 컬럼(email_change, phone 등)을 Go string으로 변환 실패 |
+| **원격 DB 수정** | 9개 NULL 텍스트 컬럼을 빈 문자열로 UPDATE |
+| **seed.sql 수정** | auth.users INSERT에 9개 컬럼 빈 문자열 명시 (로컬 재발 방지) |
+| **CLAUDE.md** | 9.8절 재발 방지 지침 추가 |
+
+---
+
 ## 2026-03-10: 관리자 계정 생성 및 시드 데이터 추가
 
 ### 배포 정보
