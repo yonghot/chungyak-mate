@@ -838,6 +838,582 @@ supabase/
 
 ---
 
+## 17. +가치 분석 엔진 아키텍처
+
+> **상태**: 설계 완료 / 구현 예정 (Phase 2)
+> **관련 PRD**: 4.1절 "+가치 — 물건 미래 가치 분석"
+> **플랜 제한**: Plus 이상 (Free 비활성)
+
+---
+
+### 17.1 설계 개요
+
+단지의 분양가 적정성, 입지 환경, 미래 시세를 복합 분석하여 A~F 6단계 등급을 산출한다. 감정평가사들이 실무에서 활용하는 DCF(현금흐름할인법) 원리를 채용하되, 시장 수요와 대중 기대감을 보정 계수로 반영하여 현실적인 가치를 산정한다.
+
+**등급 매핑**:
+
+| 등급 | 점수 범위 | 의미 |
+|------|-----------|------|
+| A | 85 이상 | 적극 권장 |
+| B | 70 ~ 84 | 권장 |
+| C | 55 ~ 69 | 보통 |
+| D | 40 ~ 54 | 주의 |
+| E | 25 ~ 39 | 비권장 |
+| F | 0 ~ 24 | 기회 소진 경고 |
+
+**가중치 구성**:
+
+```
+총점(100) = 분양가 적정성(35%) + 입지 환경(35%) + 미래 시세(30%)
+```
+
+---
+
+### 17.2 3대 카테고리 및 세부 팩터
+
+#### 카테고리 1: 분양가 적정성 (35점 만점)
+
+DCF 원리를 단순화하여 현재 분양가의 수익성 여부를 판단한다. 미래 예상 시세에서 현재 분양가를 역산하여 가격 갭을 점수로 변환한다.
+
+| 팩터 ID | 팩터명 | 배점 | 산정 기준 | MVP 데이터 소스 |
+|---------|--------|------|-----------|----------------|
+| `price_gap_ratio` | 주변 시세 대비 분양가 비율 | 15점 | 동일 district 최근 거래가 대비 분양가 비율 (낮을수록 고점) | `supply_types.price_krw` + district 기본 시세 테이블 |
+| `price_per_sqm` | 평당 분양가 경쟁력 | 10점 | region 내 동급 면적대 평균 대비 분양가 (낮을수록 고점) | `supply_types.price_krw` / `supply_types.area_sqm` |
+| `dcf_premium` | DCF 기반 적정가 대비 프리미엄 | 10점 | 5년 보유 후 추정 매도가 현가 vs 분양가 차이 (양수일수록 고점) | 지역 연평균 상승률 상수 + `price_krw` |
+
+**DCF 단순화 공식**:
+
+```
+estimatedFuturePrice = currentMarketPrice × (1 + annualGrowthRate)^holdingYears
+presentValue = estimatedFuturePrice / (1 + discountRate)^holdingYears
+dcfGap = (presentValue - sellingPrice) / sellingPrice × 100
+```
+
+MVP 단계에서는 `annualGrowthRate`와 `discountRate`를 지역별 상수 테이블(`constants/value-analysis-constants.ts`)에서 참조한다.
+
+#### 카테고리 2: 입지 환경 (35점 만점)
+
+교통, 학군, 생활 인프라, 자연환경, 개발 호재 5개 세부 팩터로 구성한다.
+
+| 팩터 ID | 팩터명 | 배점 | 산정 기준 | MVP 데이터 소스 |
+|---------|--------|------|-----------|----------------|
+| `transport_score` | 교통 접근성 | 10점 | 지하철역 도보 거리, 주요 버스 노선 수 | district 기반 교통 등급 상수 테이블 |
+| `school_score` | 학군 | 8점 | 학군 등급 (강남권/비강남, 학원가 밀집도) | district 기반 학군 등급 상수 테이블 |
+| `infra_score` | 생활 인프라 | 7점 | 대형마트, 병원, 공원 등 편의시설 밀집도 | district 기반 인프라 등급 상수 테이블 |
+| `nature_score` | 자연환경 | 5점 | 강변, 산세권, 공원 조망 유무 | `complexes.raw_data` JSONB 파싱 또는 기본값 |
+| `development_score` | 개발 호재 | 5점 | 인근 GTX, 재개발, 신규 산업단지 등 | `complexes.raw_data` JSONB 파싱 또는 기본값 |
+
+#### 카테고리 3: 미래 시세 (30점 만점)
+
+과거 유사 단지 패턴과 지역 트렌드, 시장 심리를 복합 분석한다.
+
+| 팩터 ID | 팩터명 | 배점 | 산정 기준 | MVP 데이터 소스 |
+|---------|--------|------|-----------|----------------|
+| `historical_trend` | 지역 시세 트렌드 | 12점 | 최근 3년 동일 region 실거래가 연평균 상승률 | region 기반 시세 트렌드 상수 테이블 (Phase 2: 국토부 API) |
+| `supply_demand` | 공급/수요 지수 | 10점 | 해당 지역 입주 예정 물량 대비 인구 증가율 | region 기반 공급 지수 상수 테이블 |
+| `market_sentiment` | 시장 심리/수요 지수 | 8점 | 유사 단지 경쟁률, 청약 미달 여부, 청약홈 검색량 | `historical_competition` 테이블 (Phase 2: 실시간 크롤링) |
+
+---
+
+### 17.3 점수 산정 엔진 설계
+
+**파일 구조** (`lib/value-analysis/`):
+
+```
+lib/value-analysis/
+├── index.ts                    # 공개 API — analyzeValueScore() 단일 진입점
+├── types.ts                    # 엔진 내부 타입 정의
+├── grade-mapper.ts             # 총점 → ValueGrade 매핑 순수 함수
+├── normalizer.ts               # 원시 지표 → 0~100 정규화 순수 함수
+├── factors/
+│   ├── pricing.ts              # 분양가 적정성 3개 팩터 계산
+│   ├── location.ts             # 입지 환경 5개 팩터 계산
+│   └── future-price.ts         # 미래 시세 3개 팩터 계산
+└── constants/
+    └── regional-defaults.ts    # 지역별 기본값 (MVP 단계 상수)
+```
+
+**핵심 인터페이스** (`lib/value-analysis/types.ts`):
+
+```typescript
+/** 엔진에 주입되는 단지 원시 데이터 */
+export interface ComplexRawData {
+  complexId: string;
+  region: string;
+  district: string;
+  pricePerSqm: number;          // 평당 분양가 (원)
+  areaSqm: number;              // 전용면적 (㎡)
+  totalPriceKrw: number;        // 분양가 (원)
+  rawData: Record<string, unknown>; // complexes.raw_data JSONB
+}
+
+/** 팩터 계산 함수 시그니처 (순수 함수 계약) */
+export type FactorCalculator = (
+  data: ComplexRawData,
+  defaults: RegionalDefaults
+) => FactorResult;
+
+/** 팩터 계산 결과 */
+export interface FactorResult {
+  factorId: string;
+  rawScore: number;           // 0 ~ maxScore
+  maxScore: number;
+  normalizedScore: number;    // 0 ~ 100 (가중치 적용 전)
+  dataAvailable: boolean;     // 외부 데이터 확보 여부
+  description: string;        // 사용자 표시용 한국어 설명
+}
+
+/** 카테고리별 집계 */
+export interface CategoryResult {
+  categoryId: 'pricing' | 'location' | 'future_price';
+  label: string;
+  weightedScore: number;      // 가중치 적용 후 점수 (0~35 또는 0~30)
+  maxWeightedScore: number;
+  factors: FactorResult[];
+}
+```
+
+**점수 산출 흐름**:
+
+```
+analyzeValueScore(complexRawData)
+  │
+  ├── 1. 지역별 기본값 로드 (regional-defaults.ts)
+  │
+  ├── 2. 팩터별 원시 점수 계산 (factors/)
+  │   ├── pricing.ts → FactorResult × 3
+  │   ├── location.ts → FactorResult × 5
+  │   └── future-price.ts → FactorResult × 3
+  │
+  ├── 3. 카테고리 가중 합산
+  │   ├── 분양가 적정성: sum(rawScore) / sum(maxScore) × 35
+  │   ├── 입지 환경:     sum(rawScore) / sum(maxScore) × 35
+  │   └── 미래 시세:     sum(rawScore) / sum(maxScore) × 30
+  │
+  ├── 4. 총점 산출 (0 ~ 100)
+  │
+  └── 5. gradeMapper로 ValueGrade 결정
+```
+
+**등급 매핑 함수** (`lib/value-analysis/grade-mapper.ts`):
+
+```typescript
+/** 총점을 ValueGrade로 변환하는 순수 함수 */
+export function mapScoreToGrade(totalScore: number): ValueGrade {
+  if (totalScore >= 85) return 'A';
+  if (totalScore >= 70) return 'B';
+  if (totalScore >= 55) return 'C';
+  if (totalScore >= 40) return 'D';
+  if (totalScore >= 25) return 'E';
+  return 'F';
+}
+```
+
+**정규화 원칙** (`lib/value-analysis/normalizer.ts`):
+
+```typescript
+/**
+ * 원시 수치를 0~100 점수로 정규화한다.
+ * @param value     - 원시 값
+ * @param minValue  - 최솟값 (0점 기준)
+ * @param maxValue  - 최댓값 (100점 기준)
+ * @param inverse   - true이면 값이 낮을수록 높은 점수 (예: 평당 분양가)
+ */
+export function normalize(
+  value: number,
+  minValue: number,
+  maxValue: number,
+  inverse = false
+): number {
+  const clamped = Math.max(minValue, Math.min(maxValue, value));
+  const ratio = (clamped - minValue) / (maxValue - minValue);
+  return Math.round((inverse ? 1 - ratio : ratio) * 100);
+}
+```
+
+---
+
+### 17.4 MVP 단계 데이터 전략
+
+외부 API 미연동 단계에서 합리적인 점수를 산출하기 위해 지역별 상수 테이블을 활용한다.
+
+**데이터 확보 수준별 처리 방침**:
+
+| 데이터 상태 | 처리 방법 | 사용자 표시 |
+|------------|-----------|-------------|
+| complexes 테이블 기반 (확보) | 실제 값으로 계산 | 점수 정상 표시 |
+| district 기반 상수 테이블 (추정) | 지역 평균값으로 대체 | "지역 평균 기준" 표시 |
+| 외부 API 미연동 (미확보) | 카테고리 중간값 배정 (50점) | "데이터 미확보" 표시 |
+
+**지역별 기본값 상수** (`lib/value-analysis/constants/regional-defaults.ts`):
+
+```typescript
+export interface RegionalDefaults {
+  region: string;
+  /** 연평균 시세 상승률 (소수점, 예: 0.035 = 3.5%) */
+  annualGrowthRate: number;
+  /** DCF 할인율 */
+  discountRate: number;
+  /** 교통 등급 (1~5, 높을수록 우수) */
+  transportGrade: number;
+  /** 학군 등급 (1~5) */
+  schoolGrade: number;
+  /** 인프라 등급 (1~5) */
+  infraGrade: number;
+  /** 공급 지수 (1~5, 낮을수록 공급 과잉) */
+  supplyDemandIndex: number;
+}
+
+/** region 코드 → 기본값 매핑 (MVP 초기값) */
+export const REGIONAL_DEFAULTS: Record<string, RegionalDefaults> = {
+  '서울': {
+    region: '서울',
+    annualGrowthRate: 0.045,
+    discountRate: 0.05,
+    transportGrade: 4,
+    schoolGrade: 4,
+    infraGrade: 4,
+    supplyDemandIndex: 4,
+  },
+  '경기': {
+    region: '경기',
+    annualGrowthRate: 0.030,
+    discountRate: 0.05,
+    transportGrade: 3,
+    schoolGrade: 3,
+    infraGrade: 3,
+    supplyDemandIndex: 3,
+  },
+  // ... 나머지 광역시/도
+};
+
+/** 매핑 미존재 시 사용하는 전국 평균 기본값 */
+export const NATIONAL_DEFAULT: RegionalDefaults = {
+  region: '전국',
+  annualGrowthRate: 0.025,
+  discountRate: 0.05,
+  transportGrade: 3,
+  schoolGrade: 3,
+  infraGrade: 3,
+  supplyDemandIndex: 3,
+};
+```
+
+**[PROD-TODO] Phase 2 외부 데이터 연동 계획**:
+
+| 단계 | 데이터 | API | 대체 대상 |
+|------|--------|-----|-----------|
+| Phase 2-A | 실거래가/시세 | 국토부 실거래 공개시스템 | `price_gap_ratio`, `historical_trend` 상수 대체 |
+| Phase 2-B | 교통 접근성 | 카카오맵 API 또는 공공 교통 DB | `transport_score` 상수 대체 |
+| Phase 2-C | 시장 심리 | 청약홈 경쟁률 API (기존 연동) | `market_sentiment` 점수 고도화 |
+
+---
+
+### 17.5 서비스 레이어 설계
+
+**파일**: `lib/services/value-analysis-service.ts`
+
+기존 스텁을 다음 인터페이스로 교체한다.
+
+```typescript
+import type { ValueAnalysis, ValueFactor } from '@/types/plus-features';
+import type { SupabaseDb } from '@/types/supabase';
+import { analyzeValueScore } from '@/lib/value-analysis';
+import type { ComplexRawData } from '@/lib/value-analysis/types';
+
+/**
+ * 단지 가치 분석을 실행하고 ValueAnalysis 결과를 반환한다.
+ *
+ * @param supabase  - 서버용 Supabase 클라이언트
+ * @param complexId - 분석 대상 단지 UUID
+ * @returns 가치 분석 결과. 단지 데이터 미존재 시 null.
+ */
+export async function analyzeValue(
+  supabase: SupabaseDb,
+  complexId: string
+): Promise<ValueAnalysis | null> {
+  // 1. 단지 + 공급유형 데이터 로드 (complex-repository 경유)
+  const { data: complex, error } = await supabase
+    .from('complexes')
+    .select('*, supply_types(*)')
+    .eq('id', complexId)
+    .single();
+
+  if (error || !complex) return null;
+
+  // 2. 대표 공급유형(최소 면적 타입)에서 평당 분양가 추출
+  const representativeType = selectRepresentativeSupplyType(complex.supply_types);
+  if (!representativeType) return null;
+
+  // 3. 엔진 입력 데이터 조립
+  const rawData: ComplexRawData = {
+    complexId,
+    region: complex.region,
+    district: complex.district,
+    pricePerSqm: representativeType.price_krw / representativeType.area_sqm,
+    areaSqm: representativeType.area_sqm,
+    totalPriceKrw: representativeType.price_krw,
+    rawData: (complex.raw_data as Record<string, unknown>) ?? {},
+  };
+
+  // 4. 순수 함수 엔진 호출
+  const engineResult = analyzeValueScore(rawData);
+
+  // 5. ValueFactor[] 형태로 변환 (types/plus-features.ts 인터페이스 준수)
+  const factors: ValueFactor[] = engineResult.categories.flatMap((cat) =>
+    cat.factors.map((f) => ({
+      factor: f.factorId,
+      score: f.rawScore,
+      maxScore: f.maxScore,
+      description: f.description,
+    }))
+  );
+
+  return {
+    complexId,
+    grade: engineResult.grade,
+    totalScore: engineResult.totalScore,
+    maxScore: 100,
+    factors,
+    analyzedAt: new Date().toISOString(),
+  };
+}
+
+/** 공급유형 배열에서 대표 타입(전용면적 최솟값)을 선택한다 */
+function selectRepresentativeSupplyType(
+  supplyTypes: Array<{ price_krw: number; area_sqm: number }>
+) {
+  if (!supplyTypes || supplyTypes.length === 0) return null;
+  return supplyTypes.reduce((prev, curr) =>
+    curr.area_sqm < prev.area_sqm ? curr : prev
+  );
+}
+```
+
+**레이어 의존 관계** (CLAUDE.md 3절 원칙 준수):
+
+```
+API Route (app/api/complexes/[id]/value/route.ts)
+  └── value-analysis-service.ts (서비스)
+        ├── complex-repository.ts (리포지토리) → Supabase
+        └── lib/value-analysis/ (순수 도메인 엔진)
+              └── regional-defaults.ts (상수)
+```
+
+---
+
+### 17.6 API 라우트 설계
+
+**파일**: `app/api/complexes/[id]/value/route.ts`
+
+**엔드포인트**: `GET /api/complexes/:id/value`
+
+```typescript
+// 응답 형태 (성공)
+{
+  "data": {
+    "complexId": "uuid",
+    "grade": "B",
+    "totalScore": 74,
+    "maxScore": 100,
+    "factors": [
+      {
+        "factor": "price_gap_ratio",
+        "score": 12,
+        "maxScore": 15,
+        "description": "주변 시세 대비 분양가 비율 우수"
+      },
+      {
+        "factor": "transport_score",
+        "score": 7,
+        "maxScore": 10,
+        "description": "지역 평균 기준 (데이터 미확보)"
+      }
+      // ...
+    ],
+    "analyzedAt": "2026-03-09T10:00:00.000Z"
+  },
+  "error": null
+}
+```
+
+**인증 및 플랜 검증 흐름**:
+
+```
+GET /api/complexes/:id/value
+  │
+  ├── 1. JWT 검증 (인증 필수)
+  │       실패 → 401 AUTH_REQUIRED
+  │
+  ├── 2. 플랜 확인 — profiles.plan_type 조회
+  │       Free → 403 PLAN_UPGRADE_REQUIRED
+  │
+  ├── 3. 단지 존재 확인
+  │       미존재 → 404 COMPLEX_NOT_FOUND
+  │
+  ├── 4. value-analysis-service.analyzeValue() 호출
+  │       엔진 오류 → 500 INTERNAL_ERROR
+  │
+  └── 5. ValueAnalysis 반환 → 200 OK
+```
+
+**추가 에러 코드** (기존 6.4절 확장):
+
+| 코드 | HTTP | 설명 |
+|------|------|------|
+| `PLAN_UPGRADE_REQUIRED` | 403 | Plus 이상 플랜 필요 |
+| `VALUE_ANALYSIS_UNAVAILABLE` | 503 | 분석 데이터 부족 (단지 정보 미확보) |
+
+---
+
+### 17.7 프론트엔드 컴포넌트 설계
+
+**라우트**: `/complexes/[id]/value` (기존 디렉토리 구조 확장)
+
+```
+app/(main)/complexes/[id]/
+├── page.tsx               # 단지 상세 (기존)
+├── eligibility/
+│   └── page.tsx           # 판정 결과 (기존)
+└── value/
+    └── page.tsx           # +가치 분석 결과 (신규)
+```
+
+**컴포넌트 계층** (`components/features/value-analysis/`):
+
+```
+components/features/value-analysis/
+├── value-grade-badge.tsx       # A~F 등급 배지 (색상 코딩)
+├── value-score-card.tsx        # 총점 + 등급 요약 카드
+├── category-breakdown.tsx      # 3대 카테고리 점수 막대 차트
+├── factor-list.tsx             # 세부 팩터 목록 (dataAvailable 표시 포함)
+└── data-unavailable-notice.tsx # "데이터 미확보" 안내 컴포넌트
+```
+
+**TanStack Query 훅** (`hooks/use-value-analysis.ts`):
+
+```typescript
+/** +가치 분석 결과 조회 훅 */
+export function useValueAnalysis(complexId: string) {
+  return useQuery({
+    queryKey: ['value-analysis', complexId],
+    queryFn: () =>
+      fetch(`/api/complexes/${complexId}/value`).then((res) => res.json()),
+    staleTime: 1000 * 60 * 60, // 1시간 캐시 (분석 결과는 실시간 불필요)
+  });
+}
+```
+
+**등급별 색상 코딩** (`constants/value-analysis.ts`):
+
+```typescript
+export const VALUE_GRADE_COLORS: Record<ValueGrade, string> = {
+  A: 'text-emerald-600 bg-emerald-50',
+  B: 'text-blue-600 bg-blue-50',
+  C: 'text-yellow-600 bg-yellow-50',
+  D: 'text-orange-600 bg-orange-50',
+  E: 'text-red-500 bg-red-50',
+  F: 'text-red-700 bg-red-100',
+};
+```
+
+---
+
+### 17.8 DB 스키마 확장
+
+가치 분석 결과를 캐싱하기 위해 `complexes` 테이블에 컬럼을 추가하거나 별도 테이블을 생성한다.
+
+**Option A: complexes 테이블 컬럼 추가** (MVP 권장 — 단순성 우선):
+
+```sql
+-- 마이그레이션: 20260309000001_add_value_analysis.sql
+-- +가치 분석 결과 캐싱 필드 추가
+
+ALTER TABLE complexes
+  ADD COLUMN value_grade      TEXT CHECK (value_grade IN ('A','B','C','D','E','F')),
+  ADD COLUMN value_score      SMALLINT CHECK (value_score BETWEEN 0 AND 100),
+  ADD COLUMN value_factors    JSONB,
+  ADD COLUMN value_analyzed_at TIMESTAMPTZ;
+
+COMMENT ON COLUMN complexes.value_grade IS '+가치 분석 등급 (A~F)';
+COMMENT ON COLUMN complexes.value_score IS '+가치 분석 총점 (0~100)';
+COMMENT ON COLUMN complexes.value_factors IS '팩터별 점수 상세 (ValueFactor[])';
+COMMENT ON COLUMN complexes.value_analyzed_at IS '마지막 가치 분석 실행 시각';
+```
+
+**[PROD-TODO] Option B: 별도 테이블** (Phase 2 고려):
+
+```sql
+-- 분석 이력 관리, 사용자별 커스텀 입력 지원 시 사용
+CREATE TABLE value_analysis_results (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  complex_id    UUID NOT NULL REFERENCES complexes(id),
+  grade         TEXT NOT NULL CHECK (grade IN ('A','B','C','D','E','F')),
+  total_score   SMALLINT NOT NULL CHECK (total_score BETWEEN 0 AND 100),
+  factors       JSONB NOT NULL DEFAULT '[]',
+  analyzed_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  engine_version TEXT NOT NULL DEFAULT '1.0'
+);
+
+-- 단지당 최신 분석 1건 조회 최적화
+CREATE INDEX idx_value_analysis_complex_latest
+  ON value_analysis_results (complex_id, analyzed_at DESC);
+```
+
+**RLS 정책**:
+
+```sql
+-- complexes.value_* 컬럼: 기존 complexes_read 정책 그대로 상속
+-- (인증 사용자 읽기 전용, 관리자/Cron 쓰기)
+
+-- [PROD-TODO] value_analysis_results 테이블 추가 시:
+-- CREATE POLICY "value_analysis_read" ON value_analysis_results
+--   FOR SELECT TO authenticated USING (true);
+```
+
+---
+
+### 17.9 파일 300줄 분리 기준
+
++가치 분석 엔진은 다음 기준으로 파일을 분리한다.
+
+| 파일 | 예상 줄 수 | 분리 기준 |
+|------|------------|-----------|
+| `lib/value-analysis/index.ts` | ~50줄 | 진입점, 오케스트레이션만 |
+| `lib/value-analysis/factors/pricing.ts` | ~80줄 | 분양가 팩터 3개 |
+| `lib/value-analysis/factors/location.ts` | ~100줄 | 입지 팩터 5개 |
+| `lib/value-analysis/factors/future-price.ts` | ~80줄 | 미래 시세 팩터 3개 |
+| `lib/value-analysis/constants/regional-defaults.ts` | ~100줄 | 17개 광역시도 기본값 |
+| `lib/services/value-analysis-service.ts` | ~80줄 | 서비스 레이어만 |
+| `app/api/complexes/[id]/value/route.ts` | ~60줄 | 요청/응답 포맷만 |
+
+---
+
+### 17.10 구현 체크리스트
+
+Phase 2 착수 시 다음 순서로 구현한다.
+
+```
+[ ] 1. constants/value-analysis-constants.ts — 등급 색상, 팩터 레이블 상수
+[ ] 2. lib/value-analysis/constants/regional-defaults.ts — 17개 광역시도 기본값
+[ ] 3. lib/value-analysis/types.ts — 엔진 내부 타입
+[ ] 4. lib/value-analysis/normalizer.ts — 정규화 순수 함수
+[ ] 5. lib/value-analysis/grade-mapper.ts — 등급 매핑 순수 함수
+[ ] 6. lib/value-analysis/factors/pricing.ts — 분양가 팩터
+[ ] 7. lib/value-analysis/factors/location.ts — 입지 팩터
+[ ] 8. lib/value-analysis/factors/future-price.ts — 미래 시세 팩터
+[ ] 9. lib/value-analysis/index.ts — analyzeValueScore() 진입점
+[ ] 10. lib/services/value-analysis-service.ts — 스텁 → 실제 구현 교체
+[ ] 11. supabase/migrations/20260309000001_add_value_analysis.sql — DB 컬럼 추가
+[ ] 12. app/api/complexes/[id]/value/route.ts — API 라우트
+[ ] 13. hooks/use-value-analysis.ts — TanStack Query 훅
+[ ] 14. components/features/value-analysis/ — UI 컴포넌트 5개
+[ ] 15. app/(main)/complexes/[id]/value/page.tsx — 페이지
+[ ] 16. vitest 테스트 — normalizer, grade-mapper, 각 팩터 계산 함수
+```
+
+---
+
 ## 16. 변경 이력
 
 | 날짜 | 변경 내용 |

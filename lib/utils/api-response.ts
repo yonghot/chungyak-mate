@@ -17,6 +17,10 @@ export const ErrorCode = {
   NOT_FOUND: 'NOT_FOUND',
   METHOD_NOT_ALLOWED: 'METHOD_NOT_ALLOWED',
   CONFLICT: 'CONFLICT',
+  /** Plus 이상 플랜 필요 (architecture.md 17.6절) */
+  PLAN_UPGRADE_REQUIRED: 'PLAN_UPGRADE_REQUIRED',
+  /** 분석 데이터 부족 — 단지 정보 미확보 */
+  VALUE_ANALYSIS_UNAVAILABLE: 'VALUE_ANALYSIS_UNAVAILABLE',
 } as const;
 
 export type ErrorCodeValue = (typeof ErrorCode)[keyof typeof ErrorCode];
@@ -34,6 +38,8 @@ const ERROR_STATUS_MAP: Record<ErrorCodeValue, number> = {
   [ErrorCode.NOT_FOUND]: 404,
   [ErrorCode.METHOD_NOT_ALLOWED]: 405,
   [ErrorCode.CONFLICT]: 409,
+  [ErrorCode.PLAN_UPGRADE_REQUIRED]: 403,
+  [ErrorCode.VALUE_ANALYSIS_UNAVAILABLE]: 503,
 };
 
 /** 에러 코드별 기본 한국어 메시지 */
@@ -49,6 +55,8 @@ const ERROR_MESSAGE_MAP: Record<ErrorCodeValue, string> = {
   [ErrorCode.NOT_FOUND]: '요청한 리소스를 찾을 수 없습니다.',
   [ErrorCode.METHOD_NOT_ALLOWED]: '허용되지 않는 요청 방식입니다.',
   [ErrorCode.CONFLICT]: '이미 존재하는 데이터입니다.',
+  [ErrorCode.PLAN_UPGRADE_REQUIRED]: '+가치 분석은 Plus 플랜 이상에서 이용 가능합니다.',
+  [ErrorCode.VALUE_ANALYSIS_UNAVAILABLE]: '단지 정보가 부족하여 가치 분석을 수행할 수 없습니다.',
 };
 
 /**

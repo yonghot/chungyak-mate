@@ -1,5 +1,51 @@
 # 프로젝트 진행 내역
 
+## 2026-03-09: +가치 분석 기능 구현 (Phase 2 첫 기능)
+
+### 개요
+
+DCF(현금흐름할인법) 원리 + 시장 수요/대중 기대감을 복합 반영하여 단지의 미래 가치를 A~F 6단계 등급으로 산출하는 "+가치 분석" 기능을 구현했다. 3대 카테고리(분양가 적정성 35% / 입지 환경 35% / 미래 시세 30%) 11개 팩터로 100점 만점을 산출한다.
+
+### 신규 파일 (17개)
+
+**가치 분석 엔진 (`lib/value-analysis/`)**:
+- `types.ts` — ComplexRawData, FactorResult, CategoryResult, ValueAnalysisEngineResult 타입
+- `normalizer.ts` — 원시 수치 → 0~100 정규화 순수 함수
+- `grade-mapper.ts` — 총점 → A~F 등급 매핑 순수 함수
+- `factors/pricing.ts` — 분양가 적정성 3개 팩터 (price_gap_ratio, price_per_sqm, dcf_premium)
+- `factors/location.ts` — 입지 환경 5개 팩터 (transport, school, infra, nature, development)
+- `factors/future-price.ts` — 미래 시세 3개 팩터 (historical_trend, supply_demand, market_sentiment)
+- `constants/regional-defaults.ts` — 17개 광역시도 기본값 + 전국 평균
+- `index.ts` — analyzeValueScore() 단일 진입점
+
+**서비스/API**:
+- `lib/services/value-analysis-service.ts` — 기존 스텁 → 실제 구현 교체
+- `app/api/complexes/[id]/value/route.ts` — `GET /api/complexes/:id/value` API 엔드포인트
+- `constants/value-analysis-constants.ts` — 등급 색상, 팩터 한국어 레이블
+
+**프론트엔드 UI**:
+- `hooks/use-value-analysis.ts` — TanStack Query 훅 (1시간 캐시)
+- `components/features/value-analysis/value-grade-badge.tsx` — A~F 등급 배지
+- `components/features/value-analysis/value-score-card.tsx` — 총점 요약 카드
+- `components/features/value-analysis/category-breakdown.tsx` — 3대 카테고리 막대 차트
+- `components/features/value-analysis/factor-list.tsx` — 세부 팩터 점수 목록
+- `app/(main)/complexes/[id]/value/page.tsx` — 가치 분석 결과 페이지
+
+### 수정 파일 (1개)
+
+- `lib/utils/api-response.ts` — PLAN_UPGRADE_REQUIRED, VALUE_ANALYSIS_UNAVAILABLE 에러 코드 추가
+
+### 설계 문서
+
+- `docs/architecture.md` Section 17 "+가치 분석 엔진 아키텍처" 추가 (17.1~17.10)
+
+### 빌드 검증
+
+- `npm run build` ✅ 성공
+- `/complexes/[id]/value` 페이지 7.25 kB, `/api/complexes/[id]/value` API 정상 생성
+
+---
+
 ## 2026-03-09: 프로덕션 배포 — PRD v2.1 리얼라인먼트 반영
 
 ### 배포 정보
