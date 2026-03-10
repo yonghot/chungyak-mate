@@ -1,5 +1,29 @@
 # 프로젝트 진행 내역
 
+## 2026-03-10: 프로젝트 리네이밍 — chungyak-mate → chungyakplus
+
+### 변경 사유
+
+서비스명 "청약플러스(ChungYak Plus)"와 일치하도록 저장소명·Vercel 프로젝트명·문서 URL을 통일한다.
+
+### 변경 내역
+
+| 대상 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| `docs/PROGRESS.md` | `chungyak-mate.vercel.app` (2곳), `github.com/yonghot/chungyak-mate` (1곳) | `chungyakplus.vercel.app`, `github.com/yonghot/chungyakplus` |
+| `.vercel/project.json` | `"projectName": "chungyak-mate"` | `"projectName": "chungyakplus"` |
+| Git remote origin | `yonghot/chungyak-mate.git` | `yonghot/chungyakplus.git` |
+| `docs/architecture.md` | — | Section 18 리네이밍 설계 추가 |
+
+소스 코드·환경변수·`package.json`에는 `chungyak-mate` 참조가 없어 변경 불필요.
+
+### 후속 수동 작업
+
+- GitHub 저장소 Settings → Repository name 변경 (`chungyak-mate` → `chungyakplus`)
+- Vercel 대시보드에서 프로젝트명 변경
+
+---
+
 ## 2026-03-10: 프로덕션 배포 — +가치 분석 기능
 
 ### 배포 정보
@@ -8,7 +32,7 @@
 |------|------|
 | **배포 시각** | 2026-03-10 09:54 KST |
 | **배포 ID** | `dpl_G7pMWUKExmnYabxmnLuvoF9P4Kis` |
-| **프로덕션 URL** | https://chungyak-mate.vercel.app |
+| **프로덕션 URL** | https://chungyakplus.vercel.app |
 | **리전** | ICN1 (서울) |
 | **상태** | ● Ready |
 | **포함 커밋** | `ce8d539` [feat] +가치 분석 기능 구현 — DCF 기반 11개 팩터 복합 분석 엔진 및 UI |
@@ -73,7 +97,7 @@ DCF(현금흐름할인법) 원리 + 시장 수요/대중 기대감을 복합 반
 |------|------|
 | **배포 시각** | 2026-03-09 19:23 KST |
 | **배포 ID** | `dpl_F6vXRWJycEhKbYAjkKHRbUk99yty` |
-| **프로덕션 URL** | https://chungyak-mate.vercel.app |
+| **프로덕션 URL** | https://chungyakplus.vercel.app |
 | **리전** | ICN1 (서울) |
 | **빌드 소요** | 52초 |
 | **상태** | ● Ready |
@@ -253,7 +277,7 @@ DESIGN.md 기준으로 전체 P0 페이지의 UI/UX를 프리미엄 수준으로
 
 - **플랫폼**: Vercel
 - **브랜치**: master
-- **GitHub**: https://github.com/yonghot/chungyak-mate
+- **GitHub**: https://github.com/yonghot/chungyakplus
 - **배포 상태**: ● Ready (프로덕션)
 - **빌드 시간**: ~1분
 - **배포 일시**: 2026-03-08

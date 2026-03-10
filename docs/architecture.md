@@ -1414,6 +1414,35 @@ CREATE INDEX idx_value_analysis_complex_latest
 
 ---
 
+## 18. 프로젝트 리네이밍 — chungyak-mate → chungyakplus
+
+### 18.1 변경 사유
+
+초기 개발 단계에서 임시로 사용한 `chungyak-mate`가 서비스 정체성(청약플러스, ChungYak Plus)과 맞지 않아 저장소명·Vercel 프로젝트명을 서비스명과 일치시킨다.
+
+### 18.2 변경 범위 및 순서
+
+| 순서 | 대상 | 변경 내용 |
+|------|------|-----------|
+| 1 | `docs/PROGRESS.md` | 프로덕션 URL `chungyak-mate.vercel.app` → `chungyakplus.vercel.app` (2곳), GitHub URL `yonghot/chungyak-mate` → `yonghot/chungyakplus` (1곳) |
+| 2 | `.vercel/project.json` | `"projectName": "chungyak-mate"` → `"chungyakplus"` |
+| 3 | Git remote origin | `https://github.com/yonghot/chungyak-mate.git` → `https://github.com/yonghot/chungyakplus.git` |
+
+소스 코드, 환경변수, `package.json`(`"name": "chungyakplus"` 기확인)에는 `chungyak-mate` 참조가 없으므로 변경 불필요.
+
+### 18.3 주의사항
+
+- Vercel 대시보드의 프로젝트 표시명 변경은 수동 작업 필요 (`.vercel/project.json` 수정만으로는 Vercel 서버 측 설정이 바뀌지 않음)
+- 기존 `chungyak-mate.vercel.app` 도메인은 Vercel 프로젝트 삭제 전까지 유지되나, 공식 URL은 `chungyakplus.vercel.app`으로 안내한다
+
+### 18.4 롤백 계획
+
+- 문서 변경: `git revert`로 복원
+- Git remote: `git remote set-url origin https://github.com/yonghot/chungyak-mate.git`으로 복원
+- `.vercel/project.json`: `git revert` 또는 수동 복원
+
+---
+
 ## 16. 변경 이력
 
 | 날짜 | 변경 내용 |
@@ -1423,4 +1452,5 @@ CREATE INDEX idx_value_analysis_complex_latest
 | 2026-03-09 | PRD v2.1 리얼라인먼트 — 청약플러스 리브랜딩, Section 17 "+가치 분석 엔진 아키텍처" 설계 추가 |
 | 2026-03-10 | Section 17 구현 완료 — 엔진(8파일), 서비스, API, UI(4컴포넌트) 프로덕션 배포 |
 | 2026-03-05 | 배포 인프라 설계 추가 — Vercel 설정, 보안 헤더, Supabase 구성 |
+| 2026-03-10 | Section 18 추가 — chungyak-mate → chungyakplus 리네이밍 설계 |
 | 2026-03-05 | 공공데이터 API 연동 구현 — 청약홈 API 클라이언트, 동기화 서비스, Cron 엔드포인트, DB 마이그레이션 (`docs/public-api-integration.md` 참조) |
