@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bell, Home, Star, User } from 'lucide-react';
+import { BarChart3, Bell, Home, Star, User } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 interface MobileNavItem {
@@ -14,6 +14,7 @@ interface MobileNavItem {
 const NAV_ITEMS: MobileNavItem[] = [
   { href: '/complexes', label: '홈', icon: Home },
   { href: '/recommend', label: '추천', icon: Star },
+  { href: '/value', label: '+가치', icon: BarChart3 },
   { href: '/profile', label: '프로필', icon: User },
   { href: '/notifications', label: '알림', icon: Bell },
 ] as const;

@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import {
+  BarChart3,
   Bookmark,
   BookmarkCheck,
   ArrowLeft,
@@ -353,14 +354,24 @@ export default function ComplexDetailPage() {
 
         {/* CTA 버튼 */}
         <FadeInUp delay={0.2}>
-          <button
-            type="button"
-            className="group flex w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 px-6 py-4 text-base font-semibold text-primary-foreground shadow-md transition-all hover:from-primary/90 hover:to-primary/70 hover:shadow-lg active:scale-[0.99]"
-            onClick={() => router.push(`/complexes/${id}/eligibility`)}
-          >
-            자격 진단 시작하기
-            <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
-          </button>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              className="group flex flex-1 items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 px-6 py-4 text-base font-semibold text-primary-foreground shadow-md transition-all hover:from-primary/90 hover:to-primary/70 hover:shadow-lg active:scale-[0.99]"
+              onClick={() => router.push(`/complexes/${id}/eligibility`)}
+            >
+              자격 진단 시작하기
+              <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+            </button>
+            <button
+              type="button"
+              className="group flex flex-1 items-center justify-center gap-3 rounded-xl border-2 border-primary/20 bg-primary/5 px-6 py-4 text-base font-semibold text-primary shadow-sm transition-all hover:border-primary/40 hover:bg-primary/10 hover:shadow-md active:scale-[0.99]"
+              onClick={() => router.push(`/complexes/${id}/value`)}
+            >
+              <BarChart3 className="h-5 w-5" />
+              +가치 분석 보기
+            </button>
+          </div>
         </FadeInUp>
       </div>
     </PageTransition>

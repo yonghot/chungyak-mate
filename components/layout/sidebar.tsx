@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bell, ClipboardCheck, Home, Star, User } from 'lucide-react';
+import { BarChart3, Bell, ClipboardCheck, Home, Star, User } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { Separator } from '@/components/ui/separator';
 
@@ -29,6 +29,12 @@ const PRIMARY_NAV_ITEMS: NavItem[] = [
     href: '/recommend',
     label: '맞춤추천',
     icon: Star,
+  },
+  {
+    href: '/value',
+    label: '+가치',
+    description: '단지 가치 A~F 등급 분석',
+    icon: BarChart3,
   },
 ];
 

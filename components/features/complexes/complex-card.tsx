@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { HoverLift } from '@/components/ui/motion';
 import { cn } from '@/lib/utils/cn';
 import { formatDateShort } from '@/lib/utils/format';
+import { useValueAnalysis } from '@/hooks/use-value-analysis';
+import { ValueGradeBadge } from '@/components/features/value-analysis/value-grade-badge';
 import type { Complex, ComplexStatus } from '@/types';
 
 interface ComplexCardProps {
@@ -58,6 +60,8 @@ export function ComplexCard({
 }: ComplexCardProps) {
   const statusConfig = STATUS_CONFIG[complex.status];
   const StatusIcon = statusConfig.icon;
+  const { data: valueData } = useValueAnalysis(complex.id);
+  const valueGrade = valueData?.data?.grade;
 
   return (
     <HoverLift y={-4} scale={1.02}>
@@ -113,16 +117,21 @@ export function ComplexCard({
           </div>
 
           <div className="flex items-center justify-between">
-            <Badge
-              variant="outline"
-              className={cn(
-                'inline-flex items-center gap-1 text-xs font-medium',
-                statusConfig.className,
+            <div className="flex items-center gap-2">
+              <Badge
+                variant="outline"
+                className={cn(
+                  'inline-flex items-center gap-1 text-xs font-medium',
+                  statusConfig.className,
+                )}
+              >
+                <StatusIcon className="h-3 w-3" />
+                {statusConfig.label}
+              </Badge>
+              {valueGrade && (
+                <ValueGradeBadge grade={valueGrade} size="sm" />
               )}
-            >
-              <StatusIcon className="h-3 w-3" />
-              {statusConfig.label}
-            </Badge>
+            </div>
 
             {complex.total_units !== null && (
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
