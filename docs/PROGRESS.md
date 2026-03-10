@@ -1,5 +1,31 @@
 # 프로젝트 진행 내역
 
+## 2026-03-10: 프로덕션 배포 — +가치 분석 UI 진입점 추가
+
+### 배포 정보
+
+| 항목 | 내용 |
+|------|------|
+| **배포 시각** | 2026-03-10 10:53 KST |
+| **배포 ID** | `dpl_6zXxx24gmpHSABo2pLj1KqZ1mPYn` |
+| **프로덕션 URL** | https://chungyakplus.vercel.app |
+| **리전** | ICN1 (서울) |
+| **상태** | ● Ready |
+| **포함 커밋** | `3558605` [feat] +가치 분석 UI 진입점 추가, `c4bef26` [docs] 리네이밍 반영 |
+
+### 변경 내용
+
++가치 분석 기능이 구현되어 있었으나 UI 진입점이 없어 URL 직접 입력으로만 접근 가능했던 문제를 해결. 3곳에 진입점 추가:
+
+| 진입점 | 파일 | 설명 |
+|--------|------|------|
+| 사이드바/모바일 네비 | `sidebar.tsx`, `mobile-nav.tsx` | +가치 메뉴 항목 추가 (BarChart3 아이콘) |
+| 단지 카드 등급 배지 | `complex-card.tsx` | 상태 배지 옆에 ValueGradeBadge 조건부 표시 |
+| 단지 상세 CTA | `complexes/[id]/page.tsx` | 자격 진단 옆 "+가치 분석 보기" 버튼 추가 |
+| /value 랜딩 | `value/page.tsx` | 안내 UI + "단지 목록 보기" CTA |
+
+---
+
 ## 2026-03-10: 프로젝트 리네이밍 — chungyak-mate → chungyakplus
 
 ### 변경 사유

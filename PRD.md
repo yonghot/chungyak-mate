@@ -169,7 +169,7 @@
 **트리거**: 사용자가 관심 단지를 선택
 **플랜 제한**: Free(비활성), Plus 이상
 **완료 조건**: A~F 투자 가치 등급 산출 완료
-**구현 상태**: ✅ 구현 완료 (2026-03-10 프로덕션 배포)
+**구현 상태**: ✅ 구현 완료 (2026-03-10 프로덕션 배포, UI 진입점 3곳 추가 완료)
 
 #### 등급 산정 기준
 
@@ -265,7 +265,8 @@ Macro Layer: 금리, 정책, 공급량, 규제
 /dashboard                  → 메인 대시보드 (NEW — 스텁)
 /complexes                  → 단지 목록/검색
 /complexes/[id]             → 단지 상세
-/complexes/[id]/value       → +가치 분석 탭 (구현 완료)
+/complexes/[id]/value       → +가치 분석 탭 (구현 완료, UI 진입점 추가 완료)
+/value                      → +가치 안내 랜딩 페이지 (구현 완료)
 /complexes/[id]/prediction  → +예측 탭 (NEW — 스텁)
 /complexes/[id]/protection  → +보호 탭 (NEW — 스텁)
 /complexes/[id]/eligibility → +자격 판정 탭
