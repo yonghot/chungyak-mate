@@ -46,7 +46,7 @@
 
 | 기능 | PRD 섹션 | 우선순위 | 플랜 제한 | 스텁 필요 여부 |
 |------|----------|----------|-----------|----------------|
-| +가치: 물건 미래 가치 분석 (A~F 등급) | 4.1 STEP 1 | P1 (Phase 1) | Plus 이상 | YES — lib/analysis/ |
+| +가치: 물건 미래 가치 분석 (A~F 등급) | 4.1 STEP 1 | P1 (Phase 1) | Plus 이상 | ✅ 구현 완료 (lib/value-analysis/ + UI 고도화) |
 | +예측: 경쟁률 예측 엔진 (3계층) | 4.2 STEP 2 | P0 (Phase 2) | Plus Pro | YES — lib/prediction/ |
 | +보호: GO/WAIT/SKIP 판정 | 4.3 STEP 3 | P0 (Phase 2) | Plus Pro | YES — lib/protection/ |
 | +리포트: PDF 의사결정 보고서 | 4.5 STEP 5 | P1 (Phase 2) | Plus Pro | YES — lib/report/ |
@@ -179,7 +179,7 @@ plan_type
 
 | 엔드포인트 | 설명 | 스텁 응답 |
 |-----------|------|-----------|
-| `GET /api/complexes/[id]/value` | +가치 분석 | `{ data: null, error: { code: 'NOT_IMPLEMENTED' } }` |
+| `GET /api/complexes/[id]/value` | +가치 분석 | ✅ 구현 완료 (DCF 기반 11팩터) |
 | `GET /api/complexes/[id]/prediction` | +예측 | `{ data: null, error: { code: 'NOT_IMPLEMENTED' } }` |
 | `GET /api/complexes/[id]/protection` | +보호 | `{ data: null, error: { code: 'NOT_IMPLEMENTED' } }` |
 | `GET /api/complexes/[id]/report` | +리포트 | `{ data: null, error: { code: 'NOT_IMPLEMENTED' } }` |
@@ -209,7 +209,7 @@ plan_type
 
 | 경로 | 설명 | 내용 |
 |------|------|------|
-| `lib/services/value-analysis-service.ts` | +가치 분석 서비스 | 인터페이스 + TODO 구현 |
+| `lib/services/value-analysis-service.ts` | +가치 분석 서비스 | ✅ 구현 완료 (DCF 엔진 + 메타데이터) |
 | `lib/services/prediction-service.ts` | +예측 서비스 | 인터페이스 + TODO 구현 |
 | `lib/services/protection-service.ts` | +보호 서비스 | 인터페이스 + TODO 구현 |
 | `lib/services/report-service.ts` | +리포트 서비스 | 인터페이스 + TODO 구현 |

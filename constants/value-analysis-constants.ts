@@ -3,7 +3,7 @@
  *
  * 등급별 색상(Tailwind 클래스)과 팩터 ID → 한국어 레이블 매핑을 정의한다.
  */
-import type { ValueGrade } from '@/types/plus-features';
+import type { ValueGrade, TrendDirection, DataSource } from '@/types/plus-features';
 
 /** 등급별 Tailwind 색상 클래스 */
 export const VALUE_GRADE_COLORS: Record<ValueGrade, string> = {
@@ -45,4 +45,25 @@ export const CATEGORY_LABELS: Record<string, string> = {
   pricing: '분양가 적정성',
   location: '입지 환경',
   future_price: '미래 시세',
+};
+
+/** 시세 방향성 → 한국어 레이블 매핑 */
+export const TREND_LABELS: Record<TrendDirection, string> = {
+  up: '상승',
+  down: '하락',
+  neutral: '보합',
+};
+
+/** 시세 방향성 → 아이콘 문자 매핑 */
+export const TREND_ICONS: Record<TrendDirection, string> = {
+  up: '▲',
+  down: '▼',
+  neutral: '─',
+};
+
+/** 기본 데이터 출처 */
+export const DATA_SOURCE_DEFAULT: DataSource = {
+  label: '청약홈 공공데이터 + 자체 모델링',
+  // split('T')[0]은 ISO 형식에서 항상 날짜 부분을 반환하므로 non-null 단언 대신 ?? 처리
+  baseDate: new Date().toISOString().split('T')[0] ?? new Date().toISOString(),
 };

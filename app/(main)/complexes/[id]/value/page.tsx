@@ -145,6 +145,9 @@ export default function ValueAnalysisPage() {
             grade={analysis.grade}
             totalScore={analysis.totalScore}
             maxScore={analysis.maxScore}
+            analyzedAt={analysis.analyzedAt}
+            dataSource={analysis.dataSource}
+            confidence={analysis.confidence}
           />
         </FadeInUp>
 
@@ -156,6 +159,17 @@ export default function ValueAnalysisPage() {
         {/* 세부 팩터 목록 */}
         <FadeInUp delay={0.2}>
           <FactorList factors={analysis.factors} />
+        </FadeInUp>
+
+        {/* 면책 조항 */}
+        <FadeInUp delay={0.25}>
+          <div className="rounded-xl border border-border/50 bg-muted/30 p-4">
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              본 분석은 공공데이터 및 자체 모델링을 기반으로 한 참고 자료이며,
+              투자 판단의 근거로 사용될 수 없습니다. 실제 부동산 가치는 시장 상황,
+              정책 변화 등에 따라 달라질 수 있으므로 전문가 상담을 권장합니다.
+            </p>
+          </div>
         </FadeInUp>
       </div>
     </PageTransition>

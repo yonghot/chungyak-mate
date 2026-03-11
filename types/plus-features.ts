@@ -10,12 +10,27 @@
 /** 가치 등급 (A~F 6단계) */
 export type ValueGrade = 'A' | 'B' | 'C' | 'D' | 'E' | 'F';
 
+/** 시세 방향성 */
+export type TrendDirection = 'up' | 'down' | 'neutral';
+
+/** 데이터 출처 */
+export interface DataSource {
+  /** 출처 레이블 (예: '청약홈 공공데이터 + 자체 모델링') */
+  label: string;
+  /** 기준일 (YYYY-MM-DD 형식) */
+  baseDate: string;
+}
+
 /** 가치 분석 항목별 점수 */
 export interface ValueFactor {
   factor: string;
   score: number;
   maxScore: number;
   description: string;
+  /** 외부 데이터 확보 여부 */
+  dataAvailable: boolean;
+  /** 시세 방향성 (미래시세 카테고리 팩터만 해당) */
+  trendDirection?: TrendDirection;
 }
 
 /** 단지 가치 분석 결과 */
@@ -26,6 +41,14 @@ export interface ValueAnalysis {
   maxScore: number;
   factors: ValueFactor[];
   analyzedAt: string;
+  /** 데이터 출처 */
+  dataSource: DataSource;
+  /** 신뢰도 (0~100, 데이터 확보 팩터 비율) */
+  confidence: number;
+  /** 데이터가 확보된 팩터 수 */
+  availableFactorCount: number;
+  /** 전체 팩터 수 */
+  totalFactorCount: number;
 }
 
 /* ─── +예측: 경쟁률 예측 ─── */

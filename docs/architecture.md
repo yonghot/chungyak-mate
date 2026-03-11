@@ -3,7 +3,7 @@
 > **작성일**: 2026-03-04
 > **상태**: MVP 완료, Phase 2 진행 중
 > **대상**: PRD v2.1 기반
-> **최종 업데이트**: 2026-03-10 (+가치 분석 엔진 구현 완료)
+> **최종 업데이트**: 2026-03-11 (+가치 분석 UI 고도화 설계 — richgo.ai 벤치마크)
 
 ---
 
@@ -1443,6 +1443,101 @@ CREATE INDEX idx_value_analysis_complex_latest
 
 ---
 
+## 19. +가치 분석 UI 고도화 — richgo.ai 벤치마크 적용
+
+> **작성일**: 2026-03-11
+> **상태**: 설계 완료, 구현 예정
+> **의존 섹션**: Section 17 (+가치 분석 엔진 아키텍처)
+
+### 19.1 목적 및 범위
+
+richgo.ai 경쟁사 분석(PRD.md 9절, DESIGN.md 9절)에서 도출된 핵심 패턴을 +가치 분석 기능에 적용하여 데이터 신뢰도와 UX를 강화한다.
+
+**구현 대상 기능**:
+| # | 기능 | 설명 | 변경 파일 |
+|---|------|------|-----------|
+| 1 | 트렌드 방향 컬러 시스템 | 상승/하락/보합 시각화 CSS 변수 | `globals.css`, `constants/` |
+| 2 | TrendBadge 컴포넌트 | 시세 방향성 배지 (▲/▼/─) | `components/ui/trend-badge.tsx` (신규) |
+| 3 | DataSourceBadge 컴포넌트 | 데이터 출처 + 기준일 표시 | `components/ui/data-source-badge.tsx` (신규) |
+| 4 | ValueScoreCard 고도화 | 분석일, 데이터 출처, 신뢰도 표시 추가 | `value-score-card.tsx` |
+| 5 | CategoryBreakdown 고도화 | Collapsible 상세 뷰 (세부 팩터 접기/펼치기) | `category-breakdown.tsx` |
+| 6 | FactorList 고도화 | 데이터 확보 상태 아이콘, 수치 nowrap | `factor-list.tsx` |
+| 7 | 면책 조항 추가 | 분석 결과 하단 면책 문구 | `value/page.tsx` |
+
+**구현 제외 (최소 구현 원칙)**:
+- Carousel 전환 (추가 의존성 필요)
+- 커스텀 폰트(GmarketSans) 추가
+- +예측/+보호 기능 (별도 Phase)
+
+### 19.2 타입 확장
+
+```typescript
+// types/plus-features.ts 확장
+
+/** 시세 방향성 */
+export type TrendDirection = 'up' | 'down' | 'neutral';
+
+/** 데이터 출처 정보 */
+export interface DataSource {
+  label: string;        // 예: "청약홈 공공데이터 + 자체 모델링"
+  baseDate: string;     // ISO 날짜 문자열
+}
+
+/** ValueFactor 확장 필드 */
+// dataAvailable: boolean   — 데이터 확보 여부
+// trendDirection?: TrendDirection — 시세 방향성 (해당 팩터만)
+
+/** ValueAnalysis 확장 필드 */
+// dataSource: DataSource       — 데이터 출처
+// confidence: number           — 신뢰도 (0~100)
+// availableFactorCount: number — 데이터 확보된 팩터 수
+// totalFactorCount: number     — 전체 팩터 수
+```
+
+### 19.3 서비스 레이어 변경
+
+`lib/services/value-analysis-service.ts`의 `analyzeValue()` 반환값에 메타데이터를 추가한다.
+엔진(`lib/value-analysis/`)은 변경하지 않는다 — 순수 함수 계약 유지.
+
+**변경 내용**:
+- `FactorResult.dataAvailable` → `ValueFactor.dataAvailable` 매핑
+- 데이터 확보 비율 → `confidence` 계산 (확보 팩터 수 / 전체 팩터 수 × 100)
+- `dataSource` 고정값 반환 (MVP: 청약홈 공공데이터 + 자체 모델링)
+
+### 19.4 디자인 시스템 확장
+
+`globals.css`에 추가할 CSS 변수:
+
+```css
+/* 트렌드 방향 컬러 (richgo.ai 벤치마크) */
+--trend-up: 153 100% 37%;      /* #00BC71 — 상승 */
+--trend-down: 345 100% 50%;    /* #FF0048 — 하락 */
+--trend-neutral: 215 16% 47%;  /* muted-foreground 재사용 — 보합 */
+```
+
+### 19.5 컴포넌트 설계
+
+**TrendBadge**: `trendDirection` prop에 따라 ▲ 상승/▼ 하락/─ 보합 텍스트와 색상을 표시.
+- `hsl(var(--trend-up))` / `hsl(var(--trend-down))` / `hsl(var(--trend-neutral))`
+- 접근성: `aria-label`로 "상승 추세"/"하락 추세"/"보합" 명시
+
+**DataSourceBadge**: 데이터 출처명과 기준일을 표시하는 인라인 배지.
+- `Database` 아이콘(lucide-react) + 출처 텍스트 + 기준일
+- 크기: xs 텍스트, muted-foreground 색상
+
+**CategoryBreakdown 개선**: shadcn/ui `Collapsible`로 각 카테고리 클릭 시 세부 팩터 목록을 토글.
+- 기존 막대 차트 유지 + ChevronDown 토글 버튼 추가
+- 접힌 상태에서는 카테고리 요약만 표시
+
+**ValueScoreCard 개선**: 카드 하단에 DataSourceBadge + 분석일 + 신뢰도 표시.
+
+**FactorList 개선**: `dataAvailable` 상태를 아이콘으로 시각화.
+- 확보: CheckCircle2 (emerald)
+- 미확보: Circle (muted-foreground/50)
+- 수치 영역 `whitespace-nowrap` 적용
+
+---
+
 ## 16. 변경 이력
 
 | 날짜 | 변경 내용 |
@@ -1454,3 +1549,4 @@ CREATE INDEX idx_value_analysis_complex_latest
 | 2026-03-05 | 배포 인프라 설계 추가 — Vercel 설정, 보안 헤더, Supabase 구성 |
 | 2026-03-10 | Section 18 추가 — chungyak-mate → chungyakplus 리네이밍 설계 |
 | 2026-03-05 | 공공데이터 API 연동 구현 — 청약홈 API 클라이언트, 동기화 서비스, Cron 엔드포인트, DB 마이그레이션 (`docs/public-api-integration.md` 참조) |
+| 2026-03-11 | Section 19 추가 — +가치 분석 UI 고도화 설계 (richgo.ai 벤치마크 적용) |

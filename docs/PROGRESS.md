@@ -1,5 +1,84 @@
 # 프로젝트 진행 내역
 
+## 2026-03-11: +가치 분석 UI 고도화 — richgo.ai 벤치마크 적용
+
+### 개요
+
+richgo.ai 경쟁사 분석에서 도출된 핵심 패턴을 +가치 분석 기능에 적용하여 데이터 신뢰도와 UX를 강화했다.
+architecture.md Section 19 설계에 따라 백엔드(타입/서비스) → 프론트엔드(디자인 시스템/컴포넌트) 순서로 구현했다.
+
+### 아키텍처 설계 (docs/architecture.md Section 19)
+
+| 항목 | 설명 |
+|------|------|
+| **Section 19.1** | 구현 범위 정의 (7개 기능 대상, 3개 제외) |
+| **Section 19.2** | 타입 확장 설계 (TrendDirection, DataSource, ValueFactor/ValueAnalysis 확장) |
+| **Section 19.3** | 서비스 레이어 변경 설계 (메타데이터 매핑, 신뢰도 계산) |
+| **Section 19.4** | 디자인 시스템 확장 설계 (CSS 변수 3개) |
+| **Section 19.5** | 컴포넌트 설계 (TrendBadge, DataSourceBadge, 기존 3개 고도화) |
+
+### 백엔드 변경 (backend-dev)
+
+| 파일 | 변경 내용 |
+|------|-----------|
+| `types/plus-features.ts` | TrendDirection 타입, DataSource 인터페이스, ValueFactor에 dataAvailable/trendDirection 추가, ValueAnalysis에 dataSource/confidence/availableFactorCount/totalFactorCount 추가 |
+| `constants/value-analysis-constants.ts` | TREND_LABELS, TREND_ICONS, DATA_SOURCE_DEFAULT 상수 추가 |
+| `lib/services/value-analysis-service.ts` | factors에 dataAvailable 매핑, future_price 팩터에 trendDirection 산출, confidence/dataSource/카운트 메타데이터 반환 |
+
+### 프론트엔드 변경 (frontend-dev)
+
+| 파일 | 변경 내용 |
+|------|-----------|
+| `app/globals.css` | --trend-up/--trend-down/--trend-neutral CSS 변수 추가, 스크롤바 너비 7px/hover 색상 개선 |
+| `components/ui/trend-badge.tsx` (신규) | 시세 방향성 배지 (▲ 상승/▼ 하락/─ 보합) — CSS 변수 기반 색상 |
+| `components/ui/data-source-badge.tsx` (신규) | 데이터 출처 + 기준일 표시 배지 (Database 아이콘) |
+| `components/ui/collapsible.tsx` (신규) | shadcn/ui Collapsible 컴포넌트 (Radix 기반) |
+| `value-score-card.tsx` | 카드 하단에 DataSourceBadge + 신뢰도 표시 추가 |
+| `category-breakdown.tsx` | Collapsible 상세 뷰 — 카테고리 클릭 시 세부 팩터 토글 |
+| `factor-list.tsx` | 데이터 확보 상태 아이콘 (CheckCircle2/Circle), TrendBadge, whitespace-nowrap |
+| `value/page.tsx` | ValueScoreCard에 메타데이터 props 전달, 면책 조항 추가 |
+
+### 빌드 검증
+
+- `npm run build` 성공 (27 페이지 정상 빌드)
+- `complexes/[id]/value` 페이지 First Load JS: 8.79 kB → 165 kB
+
+---
+
+## 2026-03-11: richgo.ai 경쟁사 분석 — PRD.md / DESIGN.md 적용
+
+### 개요
+
+경쟁사 richgo.ai(부동산 투자 분석 No.1 앱)의 구조/컨셉 및 UI/디자인을 심층 분석하여 청약플러스 문서에 반영했다.
+
+### 분석 대상
+
+- **URL**: https://m.richgo.ai/pc
+- **분석 도구**: prd-analyst 서브에이전트(구조/컨셉), frontend-dev 서브에이전트(UI/디자인)
+
+### PRD.md 변경 (prd-analyst)
+
+| 항목 | 설명 |
+|------|------|
+| **섹션 2.3 외부 데이터 소스** | 학군 데이터(교육부/나이스), 호재 정보(국토부 도시개발 고시) 2개 행 추가 (Phase 3 검토) |
+| **섹션 4.1 +가치 입지 팩터 보강** | 교통 접근성, 학군, 호재, 편의시설 세부 구성 요소 주석 추가 |
+| **섹션 5.1 알림 세분화** | Phase 3 방향: 청약 일정 / +가치 등급 변동 / 실거래가 급변 / 경쟁률 급등 4유형 |
+| **신규 섹션 9. 레퍼런스 & 경쟁사 분석** | 9.1 경쟁사 포지셔닝(리치고/청약홈/호갱노노 비교), 9.2 리치고 심층 분석, 9.3 UX 패턴 인사이트, 9.4 데이터 소스 비교 |
+| **기존 면책 문구** | 섹션 9 → 10으로 번호 변경 |
+
+### DESIGN.md 변경 (frontend-dev)
+
+| 항목 | 설명 |
+|------|------|
+| **섹션 7 레퍼런스** | richgo.ai 행 추가 |
+| **신규 섹션 9. 경쟁사 디자인 분석** | 9개 소절: 컬러 비교, 데이터 방향성 컬러(trend-up/down), radius 스케일, 구분선 계층화, 마이크로 인터랙션, 카드 디자인, 스크롤바, 폰트, shadcn/ui 매핑 |
+| **shadcn/ui 매핑** | Popover/HoverCard, Card+Badge, Switch+Form, Tabs, Sheet, Carousel(재검토) 등 10개 패턴 |
+| **+예측 컬러 시스템** | 시세 상승 #00BC71, 하락 #FF0048 — CSS 변수 `--trend-up`/`--trend-down` 정의 |
+| **Carousel 상태 변경** | 미사용 → 재검토 (단지 사진 갤러리 용도) |
+| **섹션 8 변경 이력** | 2026-03-11 행 추가 |
+
+---
+
 ## 2026-03-10: Supabase Auth 로그인 에러 수정 — NULL 텍스트 컬럼 방지
 
 ### 배포 정보

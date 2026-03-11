@@ -60,6 +60,11 @@
   --sidebar-border: 215 20% 88%;
   --sidebar-ring: 217 91% 50%;
 
+  /* 트렌드 방향 컬러 (richgo.ai 벤치마크) */
+  --trend-up: 153 100% 37%;
+  --trend-down: 345 100% 50%;
+  --trend-neutral: 215 16% 47%;
+
   /* Chart colors */
   --chart-1: 217 91% 50%;
   --chart-2: 152 69% 41%;
@@ -95,8 +100,8 @@ input[type='number'] {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
@@ -109,5 +114,5 @@ input[type='number'] {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground));
+  background: hsl(225 60% 65%);
 }

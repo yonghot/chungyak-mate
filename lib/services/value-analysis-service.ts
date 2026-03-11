@@ -4,10 +4,11 @@
  * Supabase에서 단지 + 공급유형 데이터를 조회하고,
  * 순수 함수 엔진(lib/value-analysis)을 호출하여 ValueAnalysis를 반환한다.
  */
-import type { ValueAnalysis, ValueFactor } from '@/types/plus-features';
+import type { ValueAnalysis, ValueFactor, TrendDirection } from '@/types/plus-features';
 import type { SupabaseDb } from '@/types/supabase';
 import { analyzeValueScore } from '@/lib/value-analysis';
-import type { ComplexRawData } from '@/lib/value-analysis/types';
+import type { ComplexRawData, FactorResult } from '@/lib/value-analysis/types';
+import { DATA_SOURCE_DEFAULT } from '@/constants/value-analysis-constants';
 import { logger } from '@/lib/utils/logger';
 
 /**
@@ -75,8 +76,20 @@ export async function analyzeValue(
       score: f.rawScore,
       maxScore: f.maxScore,
       description: f.description,
+      dataAvailable: f.dataAvailable,
+      // 미래 시세 카테고리 팩터에만 trendDirection 부여
+      ...(cat.categoryId === 'future_price' && {
+        trendDirection: resolveTrendDirection(f),
+      }),
     })),
   );
+
+  // 6. 신뢰도 지표 산출
+  const totalFactorCount = factors.length;
+  const availableFactorCount = factors.filter((f) => f.dataAvailable).length;
+  const confidence = totalFactorCount === 0
+    ? 0
+    : Math.floor((availableFactorCount / totalFactorCount) * 100);
 
   return {
     complexId,
@@ -85,6 +98,10 @@ export async function analyzeValue(
     maxScore: 100,
     factors,
     analyzedAt: new Date().toISOString(),
+    dataSource: DATA_SOURCE_DEFAULT,
+    confidence,
+    availableFactorCount,
+    totalFactorCount,
   };
 }
 
@@ -101,4 +118,30 @@ function selectRepresentativeSupplyType(
   return supplyTypes.reduce((prev, curr) =>
     curr.area_sqm < prev.area_sqm ? curr : prev,
   );
+}
+
+/**
+ * 미래 시세 팩터의 rawScore를 기반으로 시세 방향성을 결정한다.
+ *
+ * factorId별 임계값:
+ * - historical_trend: rawScore >= 5 → 'up', rawScore <= 2 → 'down', else → 'neutral'
+ * - supply_demand:    rawScore >= 6 → 'up', rawScore <= 3 → 'down', else → 'neutral'
+ * - market_sentiment: rawScore >= 5 → 'up', rawScore <= 2 → 'down', else → 'neutral'
+ *
+ * @param factor - 엔진 팩터 계산 결과
+ * @returns 시세 방향성
+ */
+function resolveTrendDirection(factor: FactorResult): TrendDirection {
+  const { factorId, rawScore } = factor;
+
+  if (factorId === 'supply_demand') {
+    if (rawScore >= 6) { return 'up'; }
+    if (rawScore <= 3) { return 'down'; }
+    return 'neutral';
+  }
+
+  // historical_trend, market_sentiment 공통 임계값
+  if (rawScore >= 5) { return 'up'; }
+  if (rawScore <= 2) { return 'down'; }
+  return 'neutral';
 }

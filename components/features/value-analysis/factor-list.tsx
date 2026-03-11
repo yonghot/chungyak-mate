@@ -1,4 +1,6 @@
+import { CheckCircle2, Circle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TrendBadge } from '@/components/ui/trend-badge';
 import { cn } from '@/lib/utils/cn';
 import { FACTOR_LABELS } from '@/constants/value-analysis-constants';
 import type { ValueFactor } from '@/types/plus-features';
@@ -43,20 +45,41 @@ function FactorItem({ factor }: FactorItemProps) {
   const percentage = factor.maxScore > 0 ? (factor.score / factor.maxScore) * 100 : 0;
   const scoreColorClass = getScoreColorClass(factor.score, factor.maxScore);
   const unavailable = isDataUnavailable(factor.description);
+  // 이전 데이터 호환을 위해 dataAvailable !== false 조건으로 확인
+  const dataAvailable = factor.dataAvailable !== false;
 
   return (
     <li className="flex flex-col gap-2 rounded-xl border bg-card p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
-        <span className="text-sm font-medium leading-snug">{label}</span>
-        <span
-          className={cn(
-            'shrink-0 text-sm font-semibold tabular-nums',
-            scoreColorClass,
+        {/* 데이터 확보 상태 아이콘 + 레이블 */}
+        <div className="flex items-center gap-1.5">
+          {dataAvailable ? (
+            <CheckCircle2
+              className="h-3.5 w-3.5 shrink-0 text-emerald-500"
+              aria-label="데이터 확보됨"
+            />
+          ) : (
+            <Circle
+              className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50"
+              aria-label="데이터 미확보"
+            />
           )}
-          aria-label={`점수 ${factor.score}점 / ${factor.maxScore}점`}
-        >
-          {factor.score} / {factor.maxScore}
-        </span>
+          <span className="text-sm font-medium leading-snug">{label}</span>
+        </div>
+
+        {/* 점수 표시 */}
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <span
+            className={cn('text-sm font-semibold tabular-nums whitespace-nowrap', scoreColorClass)}
+            aria-label={`점수 ${factor.score}점 / ${factor.maxScore}점`}
+          >
+            {factor.score} / {factor.maxScore}
+          </span>
+          {/* 트렌드 배지 (trendDirection이 있는 팩터만) */}
+          {factor.trendDirection && (
+            <TrendBadge direction={factor.trendDirection} />
+          )}
+        </div>
       </div>
 
       {/* 팩터 점수 진행 막대 */}
@@ -91,6 +114,7 @@ function FactorItem({ factor }: FactorItemProps) {
  * 세부 팩터 목록
  *
  * ValueFactor[] 배열을 받아 각 팩터의 점수와 설명을 카드 형태로 나열한다.
+ * 데이터 확보 상태 아이콘, 트렌드 배지를 함께 표시한다.
  * description에 "데이터 미확보"가 포함되면 별도 안내 문구로 대체한다.
  */
 export function FactorList({ factors }: FactorListProps) {

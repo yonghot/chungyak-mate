@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ValueGradeBadge } from './value-grade-badge';
+import { DataSourceBadge } from '@/components/ui/data-source-badge';
 import { VALUE_GRADE_LABELS } from '@/constants/value-analysis-constants';
-import type { ValueGrade } from '@/types/plus-features';
+import type { ValueGrade, DataSource } from '@/types/plus-features';
 
 interface ValueScoreCardProps {
   /** A~F 가치 등급 */
@@ -10,14 +11,26 @@ interface ValueScoreCardProps {
   totalScore: number;
   /** 최대 점수 */
   maxScore: number;
+  /** 분석일 (ISO 날짜 문자열) */
+  analyzedAt?: string;
+  /** 데이터 출처 */
+  dataSource?: DataSource;
+  /** 데이터 신뢰도 (0~100) */
+  confidence?: number;
 }
 
 /**
  * +가치 분석 총점 요약 카드
  *
- * 등급 배지, 총점, 등급 설명 텍스트를 함께 표시한다.
+ * 등급 배지, 총점, 등급 설명 텍스트, 데이터 출처 및 신뢰도를 함께 표시한다.
  */
-export function ValueScoreCard({ grade, totalScore, maxScore }: ValueScoreCardProps) {
+export function ValueScoreCard({
+  grade,
+  totalScore,
+  maxScore,
+  dataSource,
+  confidence,
+}: ValueScoreCardProps) {
   const scorePercentage = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
   const gradeDescription = VALUE_GRADE_LABELS[grade];
 
@@ -66,6 +79,18 @@ export function ValueScoreCard({ grade, totalScore, maxScore }: ValueScoreCardPr
         <p className="mt-3 text-sm text-muted-foreground">
           이 단지는 <strong className="text-foreground">{gradeDescription}</strong> 등급으로 평가되었습니다.
         </p>
+
+        {/* 데이터 출처 및 신뢰도 */}
+        {(dataSource ?? confidence !== undefined) && (
+          <div className="mt-3 flex items-center justify-between">
+            {dataSource && <DataSourceBadge dataSource={dataSource} />}
+            {confidence !== undefined && (
+              <span className="text-xs text-muted-foreground">
+                데이터 신뢰도 {confidence}%
+              </span>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
