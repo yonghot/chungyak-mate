@@ -1,5 +1,55 @@
 # 프로젝트 진행 내역
 
+## 2026-03-22: 지도 기반 부동산 분석 UI 구현
+
+### 개요
+
+메인 페이지를 MapLibre GL JS 기반 인터랙티브 지도로 교체했다. 가격 마커, 클러스터링, 좌측 패널(검색/필터/아파트 카드), 상단 네비게이션을 구현했다.
+
+### 구현 내용
+
+| 항목 | 설명 |
+|------|------|
+| **지도 렌더링** | MapLibre GL JS + react-map-gl, CARTO Voyager 컬러 타일 |
+| **가격 마커** | 상승(파란)/하락(주황)/안정(회색) 색상 구분, 억/만원 자동 포맷 |
+| **클러스터링** | supercluster 기반, 줌 레벨별 클러스터 ↔ 개별 마커 전환 |
+| **좌측 패널** | 검색바, 필터, AI 예측 헤더, 아파트 카드 리스트 |
+| **하단 탭 5개** | 실거래(카드 리스트), 지역분석(placeholder), 시세(평균/최고/최저 계산), 매물/청약(준비 중) |
+| **상단 네비 4개** | 아파트(/), 청약(/complexes), 시세분석(/value), 경매(/prediction) |
+| **마커↔패널 연동** | 마커 클릭→패널 하이라이트, 카드 클릭→지도 fly-to |
+| **PostGIS** | apartment_complexes/price_data/ai_predictions 테이블 + apartments_in_bounds RPC |
+
+### 생성/수정 파일
+
+| 파일 | 유형 |
+|------|------|
+| types/map.types.ts | 신규 |
+| lib/utils/price-format.ts | 신규 |
+| stores/map-store.ts | 신규 |
+| components/map/MapContainer.tsx | 신규 |
+| components/map/PriceMarker.tsx | 신규 |
+| components/map/MarkerCluster.tsx | 신규 |
+| components/map/MapControls.tsx | 신규 |
+| components/map/MapNavBar.tsx | 신규 |
+| components/map/LeftPanel.tsx | 신규 |
+| hooks/use-map-apartments.ts | 신규 |
+| lib/repositories/map-repository.ts | 신규 |
+| lib/services/map-service.ts | 신규 |
+| app/api/map/apartments/route.ts | 신규 |
+| app/page.tsx | 교체 (랜딩→지도) |
+| middleware.ts | 수정 (/api/map/ 공개) |
+| supabase/migrations/20260322000000_add_map_tables.sql | 신규 |
+| supabase/seed-map.sql | 신규 (강남구 30개 단지) |
+| docs/architecture.md Section 20 | 추가 |
+
+### 기술 결정
+
+- Mapbox 대신 MapLibre GL JS (오픈소스, 토큰 불필요)
+- CARTO Voyager 타일 (컬러, 한글 라벨, 무료)
+- 인증 불필요한 공개 API (/api/map/)
+
+---
+
 ## 2026-03-11: +가치 분석 UI 고도화 — richgo.ai 벤치마크 적용
 
 ### 개요

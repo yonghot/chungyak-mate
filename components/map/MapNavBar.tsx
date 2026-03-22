@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 const NAV_ITEMS = [
   { label: '아파트', href: '/', icon: Building2, active: true },
   { label: '청약', href: '/complexes', icon: MapPin, active: false },
-  { label: '시세분석', href: '#', icon: BarChart3, active: false },
-  { label: '경매', href: '#', icon: Gavel, active: false },
+  { label: '시세분석', href: '/value', icon: BarChart3, active: false },
+  { label: '경매', href: '/prediction', icon: Gavel, active: false },
 ] as const;
 
 export function MapNavBar() {

@@ -1550,3 +1550,98 @@ export interface DataSource {
 | 2026-03-10 | Section 18 추가 — chungyak-mate → chungyakplus 리네이밍 설계 |
 | 2026-03-05 | 공공데이터 API 연동 구현 — 청약홈 API 클라이언트, 동기화 서비스, Cron 엔드포인트, DB 마이그레이션 (`docs/public-api-integration.md` 참조) |
 | 2026-03-11 | Section 19 추가 — +가치 분석 UI 고도화 설계 (richgo.ai 벤치마크 적용) |
+| 2026-03-22 | Section 20 추가 — 지도 기반 부동산 분석 UI 설계 (MapLibre GL JS, PostGIS) |
+
+---
+
+## 20. 지도 기반 부동산 분석 UI 아키텍처
+
+### 20.1 개요
+
+메인 페이지를 인터랙티브 지도로 교체하여 부동산 시세/예측 데이터를 시각화한다.
+
+**기술 스택**:
+- MapLibre GL JS + react-map-gl (오픈소스, 토큰 불필요)
+- CARTO Voyager 타일 (컬러 지도, 한글 라벨)
+- supercluster (마커 클러스터링)
+- PostGIS (공간 쿼리)
+
+### 20.2 레이아웃 구조
+
+```
+┌──────────────────────────────────────────────┐
+│ [상단 네비바] 로고 | 아파트 | 청약 | 시세분석 | 경매 │
+├────────────┬─────────────────────────────────┤
+│ [좌측패널]  │          [지도 영역]              │
+│ 360px     │          flex-1                  │
+│           │                                  │
+│ 검색바     │   ┌──────┐ ┌──────┐              │
+│ 필터 탭    │   │ 68.3억│ │ 29.5억│              │
+│ 아파트목록  │   └──────┘ └──────┘              │
+│           │                                  │
+├────────────┤                                  │
+│ 실거래|시세|..│         줌/위치 컨트롤            │
+└────────────┴─────────────────────────────────┘
+```
+
+### 20.3 컴포넌트 트리
+
+```
+app/page.tsx (CSR, dynamic import)
+└── MapContainer.tsx
+    ├── MapNavBar.tsx        — 상단 네비게이션
+    ├── LeftPanel.tsx        — 좌측 패널
+    │   ├── 검색바
+    │   ├── 필터 행
+    │   ├── AI 예측 헤더
+    │   ├── 탭별 콘텐츠 (실거래/지역분석/시세/매물/청약)
+    │   │   ├── TabRealTransaction — 아파트 카드 리스트
+    │   │   ├── TabRegionAnalysis  — 지역 정보 placeholder
+    │   │   ├── TabPriceIndex      — 시세 요약 (평균/최고/최저)
+    │   │   └── TabComingSoon      — 매물/청약 준비 중
+    │   └── 하단 탭 메뉴
+    ├── Map (react-map-gl/maplibre)
+    │   └── MarkerCluster.tsx
+    │       └── PriceMarker.tsx
+    └── MapControls.tsx
+```
+
+### 20.4 데이터 플로우
+
+```
+뷰포트 이동 → debounce 300ms → setBounds()
+  → useMapApartments(bounds, zoom)
+    → GET /api/map/apartments?sw_lng=&sw_lat=&ne_lng=&ne_lat=
+      → map-service.ts → map-repository.ts → Supabase RPC (PostGIS)
+  → apartments[] → MarkerCluster (supercluster) → PriceMarker 렌더링
+  → apartments[] → LeftPanel 카드 리스트
+```
+
+### 20.5 DB 스키마 (PostGIS)
+
+| 테이블 | 용도 | 핵심 컬럼 |
+|--------|------|-----------|
+| apartment_complexes | 단지 좌표/메타 | location GEOMETRY(POINT, 4326) |
+| price_data | 실거래 시세 | complex_id, price BIGINT, price_type |
+| ai_predictions | AI 예측가 | complex_id, predicted_price, change_rate |
+
+RPC 함수: `apartments_in_bounds(sw_lng, sw_lat, ne_lng, ne_lat)` — ST_Within + LATERAL JOIN
+
+### 20.6 좌측 패널 하단 탭 설계
+
+| 탭 | 콘텐츠 | 데이터 소스 |
+|----|--------|-------------|
+| 실거래 | 아파트 카드 리스트 (가격순) | MapApartment[] |
+| 지역분석 | 인구/학군/교통 정보 카드 | placeholder (향후 API 연동) |
+| 시세 | 평균가/최고가/최저가 요약 | MapApartment[] 실시간 계산 |
+| 매물 | 준비 중 안내 | - |
+| 청약 | 준비 중 안내 | - |
+
+### 20.7 상단 네비게이션 라우팅
+
+| 탭 | 경로 | 상태 |
+|----|------|------|
+| 아파트 | / | 지도 메인 (현재 페이지) |
+| 청약 | /complexes | 기존 구현 |
+| 시세분석 | /value | 기존 스텁 페이지 |
+| 경매 | /prediction | 기존 스텁 페이지 |

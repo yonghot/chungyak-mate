@@ -14,7 +14,7 @@ import type { MapApartment } from '@/types/map.types';
 
 const MAP_STYLE =
   process.env.NEXT_PUBLIC_MAP_STYLE ??
-  'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+  'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
 
 export function MapContainer() {
   const mapRef = useRef<MapRef>(null);
